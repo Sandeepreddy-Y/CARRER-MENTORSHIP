@@ -20,8 +20,8 @@ export const CareerPaths = () => {
   ];
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchResources();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, search]);
 
   const fetchResources = async () => {

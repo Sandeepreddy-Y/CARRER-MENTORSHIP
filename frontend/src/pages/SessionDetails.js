@@ -10,8 +10,8 @@ export const SessionDetails = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchSessionDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchSessionDetails = async () => {
