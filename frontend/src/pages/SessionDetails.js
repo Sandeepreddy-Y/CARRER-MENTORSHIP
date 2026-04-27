@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { sessionAPI } from '../api/client';
-import { useAuth } from '../context/AuthContext';
 import '../styles/SessionDetails.css';
 
 export const SessionDetails = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchSessionDetails();
   }, [id]);
 
