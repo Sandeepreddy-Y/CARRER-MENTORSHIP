@@ -1,7 +1,9 @@
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
 require('dotenv').config();
+
+const sequelize = require('./config/database');
+const { User, CareerResource } = require('./models');
 
 const app = express();
 
@@ -11,29 +13,54 @@ app.use(express.json());
 
 const seedData = async () => {
   try {
-    const CareerResource = require('./models/CareerResource');
-    const User = require('./models/User');
-    
-    const userCount = await User.countDocuments();
+    const userCount = await User.count();
     if (userCount === 0) {
       console.log('Seeding initial counsellor...');
-      const counsellor = new User({
-        name: 'Dr. Jane Smith',
-        email: 'counsellor@example.com',
-        password: 'password123',
-        role: 'counsellor',
-        bio: 'Expert career counsellor with 10 years of experience helping students find their dream jobs.',
-        interests: ['Tech', 'Business'],
-        skills: ['Career Coaching', 'Resume Review', 'Interview Prep']
-      });
-      await counsellor.save();
+      await User.bulkCreate([
+        {
+          name: 'Dr. Jane Smith',
+          email: 'counsellor@example.com',
+          password: 'password123',
+          role: 'counsellor',
+          bio: 'Expert career counsellor with 10 years of experience helping students find their dream jobs.',
+          interests: ['Tech', 'Business'],
+          skills: ['Career Coaching', 'Resume Review', 'Interview Prep']
+        },
+        {
+          name: 'Prof. Alan Turing',
+          email: 'alan@example.com',
+          password: 'password123',
+          role: 'counsellor',
+          bio: 'Former software engineer turned mentor. Specialized in breaking into tech and algorithms.',
+          interests: ['Engineering', 'IT'],
+          skills: ['Technical Interviews', 'Coding Bootcamp Prep', 'System Design']
+        },
+        {
+          name: 'Sarah OConnor',
+          email: 'sarah@example.com',
+          password: 'password123',
+          role: 'counsellor',
+          bio: 'Healthcare professional with extensive experience in nursing career advancement.',
+          interests: ['Healthcare', 'Education'],
+          skills: ['Medical School Prep', 'Nursing Certifications', 'Work-Life Balance']
+        },
+        {
+          name: 'Michael Chen',
+          email: 'michael@example.com',
+          password: 'password123',
+          role: 'counsellor',
+          bio: 'Finance executive helping graduates land competitive roles in investment banking and analytics.',
+          interests: ['Finance', 'Business'],
+          skills: ['Financial Modeling', 'Networking', 'Salary Negotiation']
+        }
+      ], { individualHooks: true });
       console.log('Seeded counsellor successfully!');
     }
 
-    const count = await CareerResource.countDocuments();
+    const count = await CareerResource.count();
     if (count === 0) {
       console.log('Seeding initial career paths...');
-      await CareerResource.insertMany([
+      await CareerResource.bulkCreate([
         {
           title: 'Software Engineer',
           description: 'Design, develop, and test software applications. Create innovative solutions to complex problems and shape the digital landscape.',
@@ -41,7 +68,7 @@ const seedData = async () => {
           skills: ['JavaScript', 'Python', 'System Design', 'Algorithms'],
           salary: { min: 70000, max: 160000, currency: 'USD' },
           jobOutlook: 'Excellent growth expected over the next decade. High demand across all industries.',
-          educationRequired: 'Bachelor\'s in Computer Science or equivalent bootcamp experience.',
+          educationRequired: "Bachelor's in Computer Science or equivalent bootcamp experience.",
           resourceLinks: [
             { title: 'FreeCodeCamp', url: 'https://www.freecodecamp.org/', type: 'website' }
           ]
@@ -53,7 +80,7 @@ const seedData = async () => {
           skills: ['Leadership', 'Agile', 'Market Research', 'Communication'],
           salary: { min: 80000, max: 150000, currency: 'USD' },
           jobOutlook: 'Strong growth as tech companies expand product lines.',
-          educationRequired: 'Bachelor\'s in Business, Computer Science, or related field.',
+          educationRequired: "Bachelor's in Business, Computer Science, or related field.",
           resourceLinks: [
             { title: 'Product School', url: 'https://productschool.com/', type: 'course' }
           ]
@@ -75,7 +102,7 @@ const seedData = async () => {
           skills: ['SQL', 'Excel', 'Python', 'Tableau'],
           salary: { min: 55000, max: 105000, currency: 'USD' },
           jobOutlook: 'High demand across all tech and finance sectors.',
-          educationRequired: 'Bachelor\'s in Statistics, Math, IT, or related field.',
+          educationRequired: "Bachelor's in Statistics, Math, IT, or related field.",
           resourceLinks: [
             { title: 'Kaggle', url: 'https://www.kaggle.com/', type: 'website' }
           ]
@@ -87,7 +114,7 @@ const seedData = async () => {
           skills: ['Financial Modeling', 'Data Analysis', 'Excel', 'Accounting'],
           salary: { min: 60000, max: 120000, currency: 'USD' },
           jobOutlook: 'Faster than average growth due to economic complexity.',
-          educationRequired: 'Bachelor\'s in Finance, Economics, or Accounting.',
+          educationRequired: "Bachelor's in Finance, Economics, or Accounting.",
           resourceLinks: []
         },
         {
@@ -97,7 +124,7 @@ const seedData = async () => {
           skills: ['Figma', 'User Research', 'Wireframing', 'Visual Design'],
           salary: { min: 65000, max: 130000, currency: 'USD' },
           jobOutlook: 'High demand as digital products prioritize user experience.',
-          educationRequired: 'Bachelor\'s in Design, HCI, or strong portfolio.',
+          educationRequired: "Bachelor's in Design, HCI, or strong portfolio.",
           resourceLinks: []
         },
         {
@@ -107,7 +134,7 @@ const seedData = async () => {
           skills: ['Communication', 'Patience', 'Subject Matter Expertise', 'Lesson Planning'],
           salary: { min: 45000, max: 95000, currency: 'USD' },
           jobOutlook: 'Steady demand with regional variations.',
-          educationRequired: 'Bachelor\'s degree and state teaching certification.',
+          educationRequired: "Bachelor's degree and state teaching certification.",
           resourceLinks: []
         },
         {
@@ -117,7 +144,7 @@ const seedData = async () => {
           skills: ['Data Collection', 'Analysis', 'Research', 'GIS'],
           salary: { min: 50000, max: 100000, currency: 'USD' },
           jobOutlook: 'Faster than average growth driven by increasing environmental awareness.',
-          educationRequired: 'Bachelor\'s in Environmental Science or related field.',
+          educationRequired: "Bachelor's in Environmental Science or related field.",
           resourceLinks: []
         }
       ]);
@@ -130,29 +157,16 @@ const seedData = async () => {
 
 const connectDB = async () => {
   try {
-    const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/career-mentorship';
-    await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 2000
-    });
-    console.log('MongoDB connected');
+    await sequelize.authenticate();
+    console.log('SQLite database connected');
+    
+    // Sync models
+    await sequelize.sync({ force: false });
+    console.log('Models synchronized');
+    
     await seedData();
   } catch (err) {
-    console.log('MongoDB connection error, attempting to use in-memory database...', err.message);
-    try {
-      const { MongoMemoryServer } = require('mongodb-memory-server');
-      const mongoServer = await MongoMemoryServer.create();
-      const memoryUri = mongoServer.getUri();
-      await mongoose.connect(memoryUri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-      });
-      console.log(`In-memory MongoDB connected at ${memoryUri}`);
-      await seedData();
-    } catch (memErr) {
-      console.error('Failed to start in-memory database:', memErr.message);
-    }
+    console.error('Unable to connect to the database:', err.message);
   }
 };
 connectDB();

@@ -1,26 +1,32 @@
-const CareerResource = require('../models/CareerResource');
-const UserEngagement = require('../models/UserEngagement');
+const { CareerResource, UserEngagement, User } = require('../models');
+const { Op } = require('sequelize');
 
 // Get all career resources
 exports.getAllResources = async (req, res) => {
   try {
     const { category, search } = req.query;
-    let query = {};
+    let whereClause = {};
 
-    if (category) query.category = category;
+    if (category) whereClause.category = category;
     if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
-      ];
+      whereClause = {
+        ...whereClause,
+        [Op.or]: [
+          { title: { [Op.like]: `%${search}%` } },
+          { description: { [Op.like]: `%${search}%` } }
+        ]
+      };
     }
 
-    const resources = await CareerResource.find(query).populate('createdBy', 'name email');
+    const resources = await CareerResource.findAll({
+      where: whereClause,
+      include: [{ model: User, as: 'creator', attributes: ['name', 'email'] }]
+    });
     
     // Track engagement
     if (req.user) {
       await UserEngagement.create({
-        user: req.user.id,
+        userId: req.user.id,
         actionType: 'view_careerpath',
         details: { searchQuery: search, category: category }
       });
@@ -35,7 +41,9 @@ exports.getAllResources = async (req, res) => {
 // Get resource by ID
 exports.getResourceById = async (req, res) => {
   try {
-    const resource = await CareerResource.findById(req.params.id).populate('createdBy', 'name email');
+    const resource = await CareerResource.findByPk(req.params.id, {
+      include: [{ model: User, as: 'creator', attributes: ['name', 'email'] }]
+    });
 
     if (!resource) {
       return res.status(404).json({ message: 'Resource not found' });
@@ -44,9 +52,9 @@ exports.getResourceById = async (req, res) => {
     // Track engagement
     if (req.user) {
       await UserEngagement.create({
-        user: req.user.id,
+        userId: req.user.id,
         actionType: 'view_resource',
-        resourceId: resource._id
+        resourceId: resource.id
       });
     }
 
@@ -61,7 +69,7 @@ exports.createResource = async (req, res) => {
   try {
     const { title, description, category, skills, salary, jobOutlook, educationRequired, resourceLinks } = req.body;
 
-    const resource = new CareerResource({
+    const resource = await CareerResource.create({
       title,
       description,
       category,
@@ -72,8 +80,6 @@ exports.createResource = async (req, res) => {
       resourceLinks,
       createdBy: req.user.id
     });
-
-    await resource.save();
 
     res.status(201).json({
       message: 'Career resource created successfully',
@@ -89,14 +95,14 @@ exports.updateResource = async (req, res) => {
   try {
     const { title, description, category, skills, salary, jobOutlook, educationRequired, resourceLinks } = req.body;
 
-    let resource = await CareerResource.findById(req.params.id);
+    let resource = await CareerResource.findByPk(req.params.id);
 
     if (!resource) {
       return res.status(404).json({ message: 'Resource not found' });
     }
 
     // Check if user is the creator or admin
-    if (resource.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (resource.createdBy !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to update this resource' });
     }
 
@@ -109,7 +115,6 @@ exports.updateResource = async (req, res) => {
     if (educationRequired) resource.educationRequired = educationRequired;
     if (resourceLinks) resource.resourceLinks = resourceLinks;
 
-    resource.updatedAt = Date.now();
     await resource.save();
 
     res.json({
@@ -124,18 +129,18 @@ exports.updateResource = async (req, res) => {
 // Delete career resource (Admin only)
 exports.deleteResource = async (req, res) => {
   try {
-    const resource = await CareerResource.findById(req.params.id);
+    const resource = await CareerResource.findByPk(req.params.id);
 
     if (!resource) {
       return res.status(404).json({ message: 'Resource not found' });
     }
 
     // Check if user is the creator or admin
-    if (resource.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (resource.createdBy !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to delete this resource' });
     }
 
-    await CareerResource.findByIdAndDelete(req.params.id);
+    await resource.destroy();
 
     res.json({ message: 'Career resource deleted successfully' });
   } catch (error) {
@@ -147,7 +152,10 @@ exports.deleteResource = async (req, res) => {
 exports.getResourcesByCategory = async (req, res) => {
   try {
     const { category } = req.params;
-    const resources = await CareerResource.find({ category }).populate('createdBy', 'name email');
+    const resources = await CareerResource.findAll({ 
+      where: { category },
+      include: [{ model: User, as: 'creator', attributes: ['name', 'email'] }]
+    });
     
     res.json(resources);
   } catch (error) {

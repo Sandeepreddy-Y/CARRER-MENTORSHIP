@@ -1,18 +1,22 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const careerResourceSchema = new mongoose.Schema({
+const CareerResource = sequelize.define('CareerResource', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
   title: {
-    type: String,
-    required: true
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   description: {
-    type: String,
-    required: true
+    type: DataTypes.TEXT,
+    allowNull: false,
   },
   category: {
-    type: String,
-    required: true,
-    enum: [
+    type: DataTypes.ENUM(
       'Engineering',
       'Business',
       'Healthcare',
@@ -21,38 +25,29 @@ const careerResourceSchema = new mongoose.Schema({
       'Creative',
       'Education',
       'Other'
-    ]
+    ),
+    allowNull: false,
   },
-  skills: [String],
+  skills: {
+    type: DataTypes.JSON,
+    defaultValue: [],
+  },
   salary: {
-    min: Number,
-    max: Number,
-    currency: String
+    type: DataTypes.JSON, // Storing { min, max, currency }
   },
-  jobOutlook: String,
-  educationRequired: String,
-  resourceLinks: [
-    {
-      title: String,
-      url: String,
-      type: {
-        type: String,
-        enum: ['article', 'video', 'course', 'book', 'website']
-      }
-    }
-  ],
+  jobOutlook: {
+    type: DataTypes.STRING,
+  },
+  educationRequired: {
+    type: DataTypes.STRING,
+  },
+  resourceLinks: {
+    type: DataTypes.JSON, // Storing array of { title, url, type }
+    defaultValue: [],
+  },
   createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
+    type: DataTypes.UUID, // FK to User
   }
 });
 
-module.exports = mongoose.model('CareerResource', careerResourceSchema);
+module.exports = CareerResource;

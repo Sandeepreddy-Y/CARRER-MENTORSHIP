@@ -1,32 +1,39 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const userEngagementSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const UserEngagement = sequelize.define('UserEngagement', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
+  userId: {
+    type: DataTypes.UUID,
+    allowNull: false,
   },
   actionType: {
-    type: String,
-    enum: [
+    type: DataTypes.ENUM(
       'view_resource',
       'schedule_session',
       'complete_session',
       'view_careerpath',
       'take_quiz',
       'download_material'
-    ],
-    required: true
+    ),
+    allowNull: false,
   },
-  resourceId: mongoose.Schema.Types.ObjectId,
-  details: mongoose.Schema.Types.Mixed,
-  createdAt: {
-    type: Date,
-    default: Date.now
+  resourceId: {
+    type: DataTypes.STRING, // Kept as string since it might refer to different types of resources
+  },
+  details: {
+    type: DataTypes.JSON, // Using JSON for mixed data
   }
+}, {
+  indexes: [
+    {
+      fields: ['userId', 'createdAt']
+    }
+  ]
 });
 
-// Index for efficient querying
-userEngagementSchema.index({ user: 1, createdAt: -1 });
-
-module.exports = mongoose.model('UserEngagement', userEngagementSchema);
+module.exports = UserEngagement;

@@ -1,44 +1,45 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const counsellingSessionSchema = new mongoose.Schema({
-  student: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const CounsellingSession = sequelize.define('CounsellingSession', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
   },
-  counsellor: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+  studentId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+  },
+  counsellorId: {
+    type: DataTypes.UUID,
+    allowNull: false,
   },
   title: {
-    type: String,
-    required: true
+    type: DataTypes.STRING,
+    allowNull: false,
   },
-  description: String,
+  description: {
+    type: DataTypes.TEXT,
+  },
   scheduledDate: {
-    type: Date,
-    required: true
+    type: DataTypes.DATE,
+    allowNull: false,
   },
   duration: {
-    type: Number,
-    default: 60
+    type: DataTypes.INTEGER,
+    defaultValue: 60,
   },
   status: {
-    type: String,
-    enum: ['scheduled', 'completed', 'cancelled'],
-    default: 'scheduled'
+    type: DataTypes.ENUM('scheduled', 'completed', 'cancelled'),
+    defaultValue: 'scheduled',
   },
-  notes: String,
-  feedback: String,
-  createdAt: {
-    type: Date,
-    default: Date.now
+  notes: {
+    type: DataTypes.TEXT,
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now
+  feedback: {
+    type: DataTypes.TEXT,
   }
 });
 
-module.exports = mongoose.model('CounsellingSession', counsellingSessionSchema);
+module.exports = CounsellingSession;
