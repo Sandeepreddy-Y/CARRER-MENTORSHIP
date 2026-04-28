@@ -70,85 +70,100 @@ export const ScheduleSession = () => {
   }
 
   return (
-    <div className="schedule-session">
-      <div className="form-container">
-        <h1>Schedule a Counselling Session</h1>
+    <div className="schedule-container">
+      <h1>Schedule a Counselling Session</h1>
 
-        {error && <div className="error-message">{error}</div>}
+      {error && <div className="alert-error">{error}</div>}
 
-        {fetchingCounsellors ? (
-          <div>Loading counsellors...</div>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Select Counsellor</label>
-              <select
-                name="counsellorId"
-                value={formData.counsellorId}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Choose a counsellor</option>
-                {counsellors.map((counsellor) => (
-                  <option key={counsellor._id} value={counsellor._id}>
-                    {counsellor.name} - {counsellor.bio || 'Counsellor'}
-                  </option>
-                ))}
-              </select>
+      {fetchingCounsellors ? (
+        <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>Loading counsellors...</div>
+      ) : (
+        <div className="schedule-content">
+          <div className="counsellors-section">
+            <h2>Select a Counsellor</h2>
+            <div className="counsellors-list">
+              {counsellors.map((counsellor) => (
+                <div 
+                  key={counsellor.id} 
+                  className={`counsellor-card ${formData.counsellorId === counsellor.id ? 'selected' : ''}`}
+                  onClick={() => setFormData({ ...formData, counsellorId: counsellor.id })}
+                >
+                  <h3>{counsellor.name}</h3>
+                  <p>{counsellor.bio || 'Professional Career Counsellor'}</p>
+                  {counsellor.skills && counsellor.skills.length > 0 && (
+                    <div className="expertise-tags">
+                      {counsellor.skills.map((skill, index) => (
+                        <span key={index}>{skill}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {counsellors.length === 0 && (
+                <p style={{ color: 'var(--text-secondary)' }}>No counsellors available right now.</p>
+              )}
             </div>
+          </div>
 
-            <div className="form-group">
-              <label>Session Title</label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="E.g., Career Guidance Session"
-                required
-              />
-            </div>
+          <div className="booking-section">
+            <h2>Session Details</h2>
+            <form className="schedule-form" onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Session Title</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  placeholder="E.g., Career Guidance Session"
+                  required
+                />
+              </div>
 
-            <div className="form-group">
-              <label>Description</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Describe what you'd like to discuss"
-              />
-            </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Describe what you'd like to discuss"
+                  rows="4"
+                />
+              </div>
 
-            <div className="form-group">
-              <label>Date and Time</label>
-              <input
-                type="datetime-local"
-                name="scheduledDate"
-                value={formData.scheduledDate}
-                onChange={handleChange}
-                required
-              />
-            </div>
+              <div className="form-group">
+                <label>Date and Time</label>
+                <input
+                  type="datetime-local"
+                  name="scheduledDate"
+                  value={formData.scheduledDate}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-            <div className="form-group">
-              <label>Duration (minutes)</label>
-              <input
-                type="number"
-                name="duration"
-                value={formData.duration}
-                onChange={handleChange}
-                min="30"
-                max="120"
-                step="15"
-              />
-            </div>
+              <div className="form-group">
+                <label>Duration (minutes)</label>
+                <select
+                  name="duration"
+                  value={formData.duration}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="30">30 minutes</option>
+                  <option value="45">45 minutes</option>
+                  <option value="60">60 minutes</option>
+                  <option value="90">90 minutes</option>
+                </select>
+              </div>
 
-            <button type="submit" disabled={loading}>
-              {loading ? 'Scheduling...' : 'Schedule Session'}
-            </button>
-          </form>
-        )}
-      </div>
+              <button type="submit" className="btn-submit" disabled={loading || !formData.counsellorId}>
+                {loading ? 'Scheduling...' : 'Confirm Session'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

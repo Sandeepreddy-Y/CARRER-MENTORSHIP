@@ -43,7 +43,11 @@ export const Register = () => {
       });
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      if (err.response?.data?.errors && err.response.data.errors.length > 0) {
+        setError(err.response.data.errors[0].msg);
+      } else {
+        setError(err.response?.data?.message || 'Registration failed. Check network or server.');
+      }
     } finally {
       setLoading(false);
     }
